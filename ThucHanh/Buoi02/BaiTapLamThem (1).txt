@@ -1,0 +1,16 @@
+Bài tập Quản Lý Bán Hàng
+
+Câu 1: Liệt kê danh sách các sản phẩm được sản xuất tại "Trung Quoc" hoặc "Việt Nam". (Sử dụng UNION)
+Câu 2: Liệt kê danh sách các khách hàng có doanh số > 5.000.000 hoặc đã đăng ký thành viên trước năm 2006. (Sử dụng UNION)
+Câu 3: Tìm các sản phẩm do "Trung Quoc" sản xuất và có giá từ 30.000 đến 40.000. (Sử dụng INTERSECT)
+Câu 4: Tìm các khách hàng vừa có doanh số > 2.000.000 vừa đăng ký trước năm 2007. (Sử dụng INTERSECT)
+Câu 5: Liệt kê các sản phẩm chưa từng được bán ra trong bảng CTHD. (Sử dụng EXCEPT)
+Câu 6: Liệt kê các nhân viên chưa từng lập hóa đơn nào. (Sử dụng EXCEPT)
+Câu 7: Hãy liệt kê các hóa đơn có trị giá lớn hơn 500.000, gồm các thông tin số hóa đơn, ngày hóa đơn, trị giá, tên khách hàng (TenKhachHang) và tên nhân viên (TenNhanVien) lập hóa đơn, sắp xếp giảm dần theo ngày lập hóa đơn. (Sử dụng INNER JOIN)
+Câu 8: Hãy hiển thị số hóa đơn, mã sản phẩm, số lượng, tên sản phẩm, chỉ lấy các chi tiết hóa đơn của sản phẩm sản xuất tại Trung Quốc, sắp xếp theo số lượng tăng dần.(Sử dụng INNER JOIN)
+Câu 9: Liệt kê toàn bộ nhân viên, kèm thông tin số hóa đơn và ngày họ đã lập hóa đơn (nếu có). (Sử dụng LEFT JOIN)
+Câu 10: Hãy hiển thị tất cả sản phẩm với mã sản phẩm, tên sản phẩm, đơn vị tính, cùng số hóa đơn và số lượng nếu có, chỉ lấy sản phẩm có giá từ 5000 đồng trở lên, sắp xếp theo tên sản phẩm giảm dần. (Sử dụng LEFT JOIN)
+Câu 11: Hãy liệt kê tên sản phẩm và số lượng bán, kể cả sản phẩm chưa từng được bán ra. (Sử dụng RIGHT JOIN)
+Câu 12: Hãy hiển thị tất cả nhân viên với mã nhân viên, họ tên, ngày vào làm, cùng số hóa đơn và trị giá nếu có, chỉ lấy nhân viên vào làm trong năm 2006, sắp xếp theo ngày vào làm giảm dần. (Sử dụng RIGHT JOIN)
+Câu 13: liệt kê tất cả khách hàng với mã khách hàng, họ tên, cùng số hóa đơn, ngày hóa đơn, bao gồm cả khách hàng chưa có hóa đơn và hóa đơn không có khách hàng. (Sử dụng FULL JOIN)
+Câu 14: Liệt kê tất cả hóa đơn với số hóa đơn, ngày hóa đơn, cùng mã nhân viên, họ tên nhân viên, chỉ lấy các bản ghi liên quan đến nhân viên có số điện thoại bắt đầu bằng '09', sắp xếp theo ngày hóa đơn tăng dần. (Sử dụng FULL JOIN)
