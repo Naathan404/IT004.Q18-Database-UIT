@@ -2,7 +2,7 @@
 -- MSSV: 24521186
 -- Lớp: IT004.Q18.1
 
--- MÃ ĐỀ 102
+-- MÃ ĐỀ 102PT
 -- CÂU 1: Tạo cơ sở dữ liệu tên “QLPT” bao gồm các quan hệ như bảng thuộc tính trên. Khai báo khóa 
 -- chính, khóa ngoại.
 CREATE DATABASE QLPT

@@ -101,6 +101,26 @@ BEGIN
 	FROM PHIEUTINHTIEN PTT
 	JOIN inserted I ON I.MaPTT = PTT.MaPTT
 END
+GO
+
+-- Cách của cô:
+CREATE TRIGGER TRG_PhieuTinhTien_ChiTietTTDV_SoTienDichVu
+ON CHITIETTTDV
+FOR INSERT
+AS
+BEGIN
+	UPDATE PTT
+	SET PTT.SoTienDichVu = (
+		SELECT SUM(CT.ThanhTien)
+		FROM CHITIETTTDV CT
+		WHERE CT.MaPTT = PTT.MaPTT
+		GROUP BY CT.MaPTT
+	)	
+	WHERE MaPTT IN (
+		SELECT MaPTT 
+		FROM inserted 
+	)
+END
 
 -- CÂU 3
 -- Câu 3.1: Liệt kê thông tin các phiếu tính tiền (mã phiếu tính tiền, mã hợp đồng) trong năm 2024 
@@ -163,6 +183,7 @@ JOIN PHIEUTINHTIEN PTT ON PTT.MaHD = HD.MaHD
 JOIN CHITIETTTDV CT ON CT.MaPTT = PTT.MaPTT
 JOIN DICHVU DV ON DV.MaDV = CT.MaDV
 WHERE DV.TenDV = N'Điện'
+AND PTT.TinhTrangTT = N'Đã thanh toán'
 AND HD.MaHD IN (
 	SELECT HD2.MaHD
 	FROM HOPDONG HD2
