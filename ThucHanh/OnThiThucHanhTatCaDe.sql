@@ -657,3 +657,189 @@ GROUP BY BN.MaBN, BN.HoTenBN
 HAVING ISNULL(SUM(DT.TongTienTT), 0) < 100000
 
 -- ĐỀ 302
+-- Câu 1: Tương tự đề 301
+-- Câu 2
+-- 2.1 Thời gian tái khám của khám bệnh có giá trị từ 0 đến 365 ngày. 
+ALTER TABLE KHAMBENH
+ADD CONSTRAINT CHK_KhamBenh_TaiKham CHECK (TaiKham BETWEEN 0 AND 365)
+
+-- 2.2 Đơn vị tính của thuốc chỉ nhận một trong các giá trị ‘viên’, ‘hộp’, ‘lọ’, ‘vỉ’.
+ALTER TABLE THUOC 
+ADD CONSTRAINT CHK_Thuoc_DVT CHECK (DVT IN (N'viên', N'hộp', N'lọ', N'vỉ'))
+GO
+
+-- 2.3 Trị giá của đơn thuốc (TriGiaDT) được tính bằng tổng thành tiền (ThanhTien) của các 
+-- chi tiết thuộc đơn thuốc đó. Hãy viết trigger để tạo ràng buộc trên cho thao tác xóa một chi 
+-- tiết đơn thuốc.
+CREATE TRIGGER TRG_DonThuoc_TriGiaDT1
+ON CHITIETDT
+FOR DELETE 
+AS
+BEGIN
+	UPDATE DT
+	SET DT.TriGiaDT = (
+		SELECT ISNULL(SUM(CT.ThanhTien), 0)
+		FROM CHITIETDT CT
+		WHERE CT.MaDT = DT.MaDT
+	)
+	FROM DONTHUOC DT
+	JOIN deleted D ON D.MaDT = DT.MaDT
+END
+
+-- Câu 3 
+-- 3.1 Liệt kê thông tin các bệnh nhân (mã, họ tên) có địa chỉ ở ‘Tp.HCM’ cùng thông tin đơn 
+-- thuốc (mã đơn thuốc, tổng tiền thanh toán) cấp trong năm 2024 của bệnh nhân đó.
+SELECT BN.MaBN, BN.HoTenBN, DT.MaDT, DT.TongTienTT
+FROM BENHNHAN BN
+JOIN KHAMBENH KB ON KB.MaBN = BN.MaBN
+JOIN DONTHUOC DT ON DT.MaKB = KB.MaKB
+WHERE BN.DiaChi = N'Tp.HCM'
+AND YEAR(DT.NgayCapThuoc) = 2024
+
+-- 3.2 Liệt kê các bệnh nhân (mã, họ tên) có tỷ lệ chi phí do bảo hiểm y tế chi trả từ 0.1 trở lên 
+-- và được khám bởi bác sĩ thuộc cả hai chuyên khoa ‘Nội khoa’ và ‘Tai mũi họng’ trong năm 
+-- 2024.
+SELECT BN.MaBN, BN.HoTenBN
+FROM BENHNHAN BN
+JOIN KHAMBENH KB ON KB.MaBN = BN.MaBN
+JOIN BACSI BS ON BS.MaBS = KB.MaBS
+WHERE BN.BHYTChiTra >= 0.1
+AND YEAR(KB.NgayKham) = 2024
+AND BS.ChuyenKhoa = N'Nội khoa'
+INTERSECT
+SELECT BN.MaBN, BN.HoTenBN
+FROM BENHNHAN BN
+JOIN KHAMBENH KB ON KB.MaBN = BN.MaBN
+JOIN BACSI BS ON BS.MaBS = KB.MaBS
+WHERE BN.BHYTChiTra >= 0.1
+AND YEAR(KB.NgayKham) = 2024
+AND BS.ChuyenKhoa = N'Tai mũi họng'
+
+-- 3.3 Tìm thông tin các thuốc (mã, tên thuốc) thuộc loại ‘Thuốc giảm đau’ có trong chi tiết 
+-- của tất cả các đơn thuốc cấp vào ngày 01/12/2024 và đã được thanh toán.
+SELECT T.MaThuoc, T.TenThuoc
+FROM THUOC T
+WHERE T.LoaiThuoc = N'Thuốc giảm đau'
+AND NOT EXISTS (
+	SELECT *
+	FROM DONTHUOC DT
+	WHERE DT.NgayCapThuoc = '2024-12-1'
+	AND DT.TinhTrangDT = N'Đã thanh toán'
+	AND NOT EXISTS (
+		SELECT *
+		FROM CHITIETDT CT
+		WHERE CT.MaDT = DT.MaDT 
+		AND CT.MaThuoc = T.MaThuoc
+	)
+)
+
+-- 3.4 Với mỗi bác sĩ, hãy cho biết số lượt bệnh nhân có thẻ bảo hiểm y tế mà bác sĩ đó đã 
+-- khám trong năm 2024. Thông tin hiển thị: Mã bác sĩ, họ tên bác sĩ, số lượt.
+SELECT BS.MaBS, BS.HoTenBS, COUNT(BN.MaBN) AS SoLuotKham
+FROM BACSI BS
+LEFT JOIN KHAMBENH KB ON KB.MaBS = BS.MaBS
+AND YEAR(KB.NgayKham) = 2024
+LEFT JOIN BENHNHAN BN ON BN.MaBN = KB.MaBN
+AND BN.SoBHYT IS NOT NULL
+GROUP BY BS.MaBS, BS.HoTenBS
+
+-- 3.5 Trong các bệnh nhân có số lần khám bệnh nhiều nhất, tìm bệnh nhân (mã, họ tên) có 
+-- tổng số tiền đã thanh toán cho các đơn thuốc cấp trong năm 2024 nhiều hơn 250,000 VNĐ. 
+SELECT BN.MaBN, BN.HoTenBN
+FROM BENHNHAN BN
+JOIN KHAMBENH KB ON KB.MaBN = BN.MaBN
+JOIN DONTHUOC DT ON DT.MaKB = KB.MaKB
+WHERE DT.TinhTrangDT = N'Đã thanh toán'
+AND YEAR(DT.NgayCapThuoc) = 2024
+AND BN.MaBN IN (
+	SELECT TOP 1 WITH TIES KB.MaBN 
+	FROM KHAMBENH KB
+	GROUP BY KB.MaBN
+	ORDER BY COUNT(KB.MaKB) DESC
+)
+GROUP BY BN.MaBN, BN.HoTenBN
+HAVING SUM(DT.TongTienTT) > 250000
+
+-- ĐỀ 01 ÔN TẬP LAB 6
+-- Câu 1
+CREATE DATABASE QLSACH
+GO
+
+CREATE TABLE TACGIA
+(
+	MaTG CHAR(5) PRIMARY KEY,
+	HoTen VARCHAR(20),
+	DiaChi VARCHAR(50),
+	NgSinh SMALLDATETIME,
+	SoDT VARCHAR(15)
+)
+
+CREATE TABLE SACH
+(
+	MaSach CHAR(5) PRIMARY KEY,
+	TenSach VARCHAR(25),
+	TheLoai VARCHAR(25)
+)
+
+CREATE TABLE TACGIA_SACH
+(
+	MaTG CHAR(5),
+	MaSach CHAR(5),
+	CONSTRAINT PK_Tacgia_Sach PRIMARY KEY (MaTG, MaSach),
+	CONSTRAINT FK_TgS_TacGia FOREIGN KEY (MaTG) REFERENCES TACGIA(MaTG),
+	CONSTRAINT FK_TgS_Sach FOREIGN KEY (MaSach) REFERENCES SACH(MaSach)
+)
+
+CREATE TABLE PHATHANH
+(
+	MaPH CHAR(5) PRIMARY KEY,
+	MaSach CHAR(5),
+	NgayPH SMALLDATETIME, 
+	SoLuong INT,
+	NhaXuatBan VARCHAR(20)
+	CONSTRAINT FK_PhatHanh_Sach FOREIGN KEY (MaSach) REFERENCES SACH(MaSach)
+)
+GO 
+
+-- Câu 2
+-- 2.1 Ngày phát hành sách phải lớn hơn ngày sinh của tác giả. 
+CREATE TRIGGER TRG_TgS_PhatHanh_NgayPH_NgSinh
+ON TACGIA_SACH
+FOR UPDATE, INSERT
+AS
+BEGIN
+	IF EXISTS (
+		SELECT * 
+		FROM TACGIA TG 
+		JOIN inserted I ON I.MaTG = TG.MaTG
+		JOIN PHATHANH PH ON PH.MaSach = I.MaSach
+		WHERE TG.NgSinh >= PH.NgayPH
+	)
+	BEGIN
+		RAISERROR(N'Lỗi ràng buộc: Ngày phát hành sách phải lớn hơn ngày sinh của tác giả.', 16, 1)
+		ROLLBACK TRANSACTION
+		RETURN
+	END
+END
+GO
+
+CREATE TRIGGER TRG_PhatHanh_TgS_NgayPH_NgSinh
+ON PHATHANH
+FOR INSERT, UPDATE 
+AS
+BEGIN
+	IF EXISTS (
+		SELECT *
+		FROM TACGIA_SACH TGS 
+		JOIN TACGIA TG ON TG.MaTG = TGS.MaTG
+		JOIN inserted I ON I.MaSach = TGS.MaSach
+		WHERE TG.NgSinh >= I.NgayPH
+	)
+	BEGIN
+		RAISERROR(N'Lỗi ràng buộc: Ngày phát hành sách phải lớn hơn ngày sinh của tác giả.', 16, 1)
+		ROLLBACK TRANSACTION
+		RETURN
+	END
+END
+
+-- tôi làm biếng rồi...
